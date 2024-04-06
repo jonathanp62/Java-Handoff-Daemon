@@ -1,0 +1,5 @@
+= Handoff Daemon
+
+This daemon program consumes and handles command line arguments transmitted to it from a Node.js client program.
+
+=== Current version: 0.1.0.
