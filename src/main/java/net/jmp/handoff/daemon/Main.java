@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Main.java 0.2.0   04/06/2024
  * (#)Main.java 0.1.0   04/05/2024
  *
  * @author    Jonathan Parker
- * @version   0.1.0
+ * @version   0.2.0
  * @since     0.1.0
  *
  * MIT License
@@ -53,6 +54,8 @@ public final class Main {
     private void run() {
         this.logger.entry();
 
+        final var serializer = new Object();
+
         final var config = new Configuration();
 
         config.setPort(8080);
@@ -76,14 +79,39 @@ public final class Main {
                     this.logger.info("Client has disconnected: {}", sessionId);
                 });
 
-        server.addEventListener("MESSAGE", String.class,
+        server.addEventListener("VERSION", String.class,
                 (client, message, ackRequest) -> {
-                    this.logger.info("Client said: " + message);
+                    final var sessionId = client.getSessionId().toString();
+
+                    this.logger.info("Client sent VERSION event: {}", sessionId);
+                    client.sendEvent("VERSION", "Handoff daemon version 0.2.0");
+                });
+
+        server.addEventListener("STOP", String.class,
+                (client, message, ackRequest) -> {
+                    final var sessionId = client.getSessionId().toString();
+
+                    this.logger.info("Client sent STOP event: {}", sessionId);
+                    client.sendEvent("STOP", "Handoff daemon stopping...");
+
+                    synchronized (serializer) {
+                        serializer.notifyAll();
+                    }
                 });
 
         server.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+
+        synchronized (serializer) {
+            try {
+                serializer.wait();
+            } catch (final InterruptedException ie) {
+                this.logger.catching(ie);
+            }
+
+            server.stop();
+        }
 
         this.logger.exit();
     }
