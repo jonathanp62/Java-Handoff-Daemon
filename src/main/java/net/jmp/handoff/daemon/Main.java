@@ -40,10 +40,16 @@ import org.slf4j.ext.XLogger;
 public final class Main {
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
 
+    /**
+     * The constructor.
+     */
     private Main() {
         super();
     }
 
+    /**
+     * The run method.
+     */
     private void run() {
         this.logger.entry();
 
@@ -82,6 +88,11 @@ public final class Main {
         this.logger.exit();
     }
 
+    /**
+     * The main method.
+     *
+     * @param   arguments   java.lang.String[]
+     */
     public static void main(final String[] arguments) {
         new Main().run();
     }
