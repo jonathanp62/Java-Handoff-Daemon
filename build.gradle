@@ -71,6 +71,7 @@ dependencies {
     implementation libs.ch.qos.logback.logback.classic
     implementation libs.ch.qos.logback.logback.core
     implementation libs.com.corundumstudio.socketio.netty.socketio
+    implementation libs.com.google.code.gson.gson
     implementation libs.org.slf4j.slf4j.api
     implementation libs.org.slf4j.slf4j.ext
     testImplementation libs.junit.junit
@@ -118,3 +119,12 @@ task execProgram(type: JavaExec) {
     mainClass = javaMainClass
 }
 
+task copyJar(type: Copy) {
+    from ("/Users/Maestro/.m2/repository/net/jmp/handoff/daemon/handoff-daemon/${version}") {
+        include "handoff-daemon-${version}.jar"
+    }
+    into '/Users/Maestro/.handoff/daemon/lib'
+
+    group = "Deployment"
+    description = "Deploy the jar published to Maven"
+}

@@ -4,7 +4,7 @@
 # (#)libs.versions.toml 0.4.0   03/23/2024
 #
 #  @author   Jonathan Parker
-#  @version  0.2.0
+#  @version  0.4.0
 #  @since    0.2.0
 #
 #  MIT License
@@ -33,6 +33,7 @@
 ch-qos-logback-logback-classic = "1.4.12"
 ch-qos-logback-logback-core = "1.4.12"
 com-corundumstudio-socketio-netty-socketio = "2.0.3"
+com-google-code-gson-gson = "2.10.1"
 junit-junit = "4.13.2"
 org-slf4j-slf4j-api = "2.0.11"
 org-slf4j-slf4j-ext = "2.0.11"
@@ -41,6 +42,7 @@ org-slf4j-slf4j-ext = "2.0.11"
 ch-qos-logback-logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "ch-qos-logback-logback-classic" }
 ch-qos-logback-logback-core = { module = "ch.qos.logback:logback-core", version.ref = "ch-qos-logback-logback-core" }
 com-corundumstudio-socketio-netty-socketio = { module = "com.corundumstudio.socketio:netty-socketio", version.ref = "com-corundumstudio-socketio-netty-socketio" }
+com-google-code-gson-gson = { module = "com.google.code.gson:gson", version.ref = "com-google-code-gson-gson" }
 junit-junit = { module = "junit:junit", version.ref = "junit-junit" }
 org-slf4j-slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "org-slf4j-slf4j-api" }
 org-slf4j-slf4j-ext = { module = "org.slf4j:slf4j-ext", version.ref = "org-slf4j-slf4j-ext" }
