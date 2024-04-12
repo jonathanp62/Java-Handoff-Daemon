@@ -1,11 +1,12 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Main.java 0.3.0   04/12/2024
  * (#)Main.java 0.2.0   04/06/2024
  * (#)Main.java 0.1.0   04/05/2024
  *
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.3.0
  * @since     0.1.0
  *
  * MIT License
@@ -58,7 +59,7 @@ public final class Main {
 
         final var config = new Configuration();
 
-        config.setPort(8080);
+        config.setPort(10130);
         config.setHostname("localhost");
 
         final var server = new SocketIOServer(config);
@@ -69,7 +70,7 @@ public final class Main {
 
                     this.logger.info("Client has connected: {}", sessionId);
 
-                    client.sendEvent("EVENT_CONNECT", "connected");
+                    client.sendEvent(SocketEvents.CONNECT, "connected");
                 });
 
         server.addDisconnectListener(
@@ -79,20 +80,20 @@ public final class Main {
                     this.logger.info("Client has disconnected: {}", sessionId);
                 });
 
-        server.addEventListener("VERSION", String.class,
+        server.addEventListener(SocketEvents.VERSION, String.class,
                 (client, message, ackRequest) -> {
                     final var sessionId = client.getSessionId().toString();
 
-                    this.logger.info("Client sent VERSION event: {}", sessionId);
-                    client.sendEvent("VERSION", "Handoff daemon version 0.2.0");
+                    this.logger.info("Client sent {} event: {}", SocketEvents.VERSION, sessionId);
+                    client.sendEvent(SocketEvents.VERSION, "Handoff daemon version 0.3.0");
                 });
 
-        server.addEventListener("STOP", String.class,
+        server.addEventListener(SocketEvents.STOP, String.class,
                 (client, message, ackRequest) -> {
                     final var sessionId = client.getSessionId().toString();
 
-                    this.logger.info("Client sent STOP event: {}", sessionId);
-                    client.sendEvent("STOP", "Handoff daemon stopping...");
+                    this.logger.info("Client sent {} event: {}", SocketEvents.STOP, sessionId);
+                    client.sendEvent(SocketEvents.STOP, "Handoff daemon stopping...");
 
                     synchronized (serializer) {
                         serializer.notifyAll();
@@ -100,8 +101,6 @@ public final class Main {
                 });
 
         server.start();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
 
         synchronized (serializer) {
             try {
