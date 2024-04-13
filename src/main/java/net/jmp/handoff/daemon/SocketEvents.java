@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)SocketEvents.java 0.4.0   04/13/2024
  * (#)SocketEvents.java 0.2.0   04/12/2024
  *
  * @author    Jonathan Parker
- * @version   0.2.0
+ * @version   0.4.0
  * @since     0.2.0
  *
  * MIT License
@@ -32,6 +33,7 @@ package net.jmp.handoff.daemon;
 
 final class SocketEvents {
     static final String CONNECT = "EVENT_CONNECT";
+    static final String DISCONNECT = "EVENT_DISCONNECT";
     static final String STOP = "STOP";
     static final String VERSION = "VERSION";
 }

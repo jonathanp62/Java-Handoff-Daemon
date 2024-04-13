@@ -34,6 +34,7 @@ package net.jmp.handoff.daemon;
  */
 
 import com.corundumstudio.socketio.Configuration;
+import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 
 import com.google.gson.Gson;
@@ -105,42 +106,66 @@ public final class Main {
         this.server = new SocketIOServer(socketIoConfig);
 
         this.server.addConnectListener(
-                client -> {
-                    final var sessionId = client.getSessionId().toString();
-
-                    this.logger.info("Client has connected: {}", sessionId);
-
-                    client.sendEvent(SocketEvents.CONNECT, "connected");
-                });
+                this::connectEventHandler);     // client -> this.connectEventHandler(client));
 
         this.server.addDisconnectListener(
-                client -> {
-                    final var sessionId = client.getSessionId().toString();
-
-                    this.logger.info("Client has disconnected: {}", sessionId);
-                });
+                this::disconnectEventHandler);  // client -> this.disconnectEventHandler(client))
 
         this.server.addEventListener(SocketEvents.VERSION, String.class,
-                (client, message, ackRequest) -> {
-                    final var sessionId = client.getSessionId().toString();
-
-                    this.logger.info("Client sent {} event: {}", SocketEvents.VERSION, sessionId);
-                    client.sendEvent(SocketEvents.VERSION, "Handoff daemon version " + Version.VERSION);
-                });
+                (client, message, ackRequest) -> this.versionEventHandler(client));
 
         this.server.addEventListener(SocketEvents.STOP, String.class,
-                (client, message, ackRequest) -> {
-                    final var sessionId = client.getSessionId().toString();
-
-                    this.logger.info("Client sent {} event: {}", SocketEvents.STOP, sessionId);
-                    client.sendEvent(SocketEvents.STOP, "Handoff daemon stopping...");
-
-                    synchronized (this.stopSerializer) {
-                        this.stopSerializer.notifyAll();
-                    }
-                });
+                (client, message, ackRequest) -> this.stopEventHandler(client));
 
         this.server.start();
+
+        this.logger.exit();
+    }
+
+    private void connectEventHandler(final SocketIOClient client) {
+        this.logger.entry(client);
+
+        final var sessionId = client.getSessionId().toString();
+
+        this.logEvent(SocketEvents.CONNECT, sessionId);
+
+        client.sendEvent(SocketEvents.CONNECT, "connected");
+
+        this.logger.exit();
+    }
+
+    private void disconnectEventHandler(final SocketIOClient client) {
+        this.logger.entry(client);
+
+        this.logEvent(SocketEvents.DISCONNECT, client.getSessionId().toString());
+
+        this.logger.exit();
+    }
+
+    private void versionEventHandler(final SocketIOClient client) {
+        this.logger.entry(client);
+
+        final var sessionId = client.getSessionId().toString();
+
+        this.logEvent(SocketEvents.VERSION, sessionId);
+
+        client.sendEvent(SocketEvents.VERSION, "Handoff daemon version " + Version.VERSION);
+
+        this.logger.exit();
+    }
+
+    private void stopEventHandler(final SocketIOClient client ) {
+        this.logger.entry(client);
+
+        final var sessionId = client.getSessionId().toString();
+
+        this.logEvent(SocketEvents.STOP, sessionId);
+
+        client.sendEvent(SocketEvents.STOP, "Handoff daemon stopping...");
+
+        synchronized (this.stopSerializer) {
+            this.stopSerializer.notifyAll();
+        }
 
         this.logger.exit();
     }
@@ -154,9 +179,17 @@ public final class Main {
             } catch (final InterruptedException ie) {
                 this.logger.catching(ie);
             }
-
-            this.server.stop();
         }
+
+        this.server.stop();
+
+        this.logger.exit();
+    }
+
+    private void logEvent(final String eventName, final String sessionId, final String ... args) {
+        this.logger.entry(eventName, sessionId, args);
+
+        this.logger.info("Client sent {} event: {}", eventName, sessionId);
 
         this.logger.exit();
     }
