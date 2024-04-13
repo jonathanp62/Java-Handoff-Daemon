@@ -34,6 +34,14 @@ import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 
+import com.google.gson.Gson;
+
+import java.time.LocalDateTime;
+
+import java.time.format.DateTimeFormatter;
+
+import java.util.UUID;
+
 import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
@@ -97,7 +105,15 @@ final class Server {
 
         this.logEvent(SocketEvents.CONNECT, sessionId);
 
-        client.sendEvent(SocketEvents.CONNECT, "connected");
+        final var response = new Response();
+        final var gson = new Gson();
+
+        response.setId(UUID.randomUUID().toString());
+        response.setSessionId(sessionId);
+        response.setDateTime(this.getLocalDateTime());
+        response.setEvent(SocketEvents.CONNECT);
+
+        client.sendEvent(SocketEvents.CONNECT, gson.toJson(response));
 
         this.logger.exit();
     }
@@ -117,7 +133,16 @@ final class Server {
 
         this.logEvent(SocketEvents.VERSION, sessionId);
 
-        client.sendEvent(SocketEvents.VERSION, "Handoff daemon version " + Version.VERSION);
+        final var response = new Response();
+        final var gson = new Gson();
+
+        response.setId(UUID.randomUUID().toString());
+        response.setSessionId(sessionId);
+        response.setDateTime(this.getLocalDateTime());
+        response.setEvent(SocketEvents.VERSION);
+        response.setContent("Handoff daemon version " + Version.VERSION);
+
+        client.sendEvent(SocketEvents.VERSION, gson.toJson(response));
 
         this.logger.exit();
     }
@@ -129,7 +154,16 @@ final class Server {
 
         this.logEvent(SocketEvents.STOP, sessionId);
 
-        client.sendEvent(SocketEvents.STOP, "Handoff daemon stopping...");
+        final var response = new Response();
+        final var gson = new Gson();
+
+        response.setId(UUID.randomUUID().toString());
+        response.setSessionId(sessionId);
+        response.setDateTime(this.getLocalDateTime());
+        response.setEvent(SocketEvents.STOP);
+        response.setContent("Handoff daemon stopping");
+
+        client.sendEvent(SocketEvents.STOP, gson.toJson(response));
 
         synchronized (this.stopSerializer) {
             this.stopSerializer.notifyAll();
@@ -160,5 +194,17 @@ final class Server {
         this.server.stop();
 
         this.logger.exit();
+    }
+
+    private String getLocalDateTime() {
+        this.logger.entry();
+
+        final var localDateTime = LocalDateTime.now();
+        final var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        final var formattedDate = localDateTime.format(formatter);
+
+        this.logger.exit(formattedDate);
+
+        return formattedDate;
     }
 }
