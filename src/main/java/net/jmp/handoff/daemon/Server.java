@@ -35,6 +35,7 @@ import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 
 import org.slf4j.LoggerFactory;
+
 import org.slf4j.ext.XLogger;
 
 final class Server {
