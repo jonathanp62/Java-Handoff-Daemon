@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
+ (#)logback.xml 0.4.0   04/13/2024
  (#)logback.xml 0.1.0   04/05/2024
 
  @author   Jonathan Parker
- @version  0.1.0
+ @version  0.3.0
  @since    0.1.0
 
  MIT License
@@ -38,6 +39,9 @@
     </appender>
 
     <logger name="net.jmp.handoff.daemon.Main" additivity="false" level="info">
+        <appender-ref ref="MAIN" />
+    </logger>
+    <logger name="net.jmp.handoff.daemon.Server" additivity="false" level="info">
         <appender-ref ref="MAIN" />
     </logger>
 
