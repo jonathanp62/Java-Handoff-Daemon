@@ -53,7 +53,8 @@ final class Server {
     private final String hostName;
     private final int port;
 
-    private SocketIOServer server;
+    private SocketIOServer socketIOServer;
+    private boolean isStopEventReceived;
 
     Server(final String hostName, final int port) {
         super();
@@ -79,21 +80,21 @@ final class Server {
         socketIoConfig.setPort(this.port);
         socketIoConfig.setHostname(this.hostName);
 
-        this.server = new SocketIOServer(socketIoConfig);
+        this.socketIOServer = new SocketIOServer(socketIoConfig);
 
-        this.server.addConnectListener(
+        this.socketIOServer.addConnectListener(
                 this::connectEventHandler);     // client -> this.connectEventHandler(client));
 
-        this.server.addDisconnectListener(
+        this.socketIOServer.addDisconnectListener(
                 this::disconnectEventHandler);  // client -> this.disconnectEventHandler(client))
 
-        this.server.addEventListener(SocketEvents.VERSION, String.class,
+        this.socketIOServer.addEventListener(SocketEvents.VERSION.getValue(), String.class,
                 (client, message, ackRequest) -> this.versionEventHandler(client));
 
-        this.server.addEventListener(SocketEvents.STOP, String.class,
+        this.socketIOServer.addEventListener(SocketEvents.STOP.getValue(), String.class,
                 (client, message, ackRequest) -> this.stopEventHandler(client));
 
-        this.server.start();
+        this.socketIOServer.start();
 
         this.logger.exit();
     }
@@ -103,7 +104,7 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
 
-        this.logEvent(SocketEvents.CONNECT, sessionId);
+        this.logEvent(SocketEvents.CONNECT.getValue(), sessionId);
 
         final var response = new Response();
         final var gson = new Gson();
@@ -112,8 +113,9 @@ final class Server {
         response.setSessionId(sessionId);
         response.setDateTime(this.getLocalDateTime());
         response.setEvent(SocketEvents.CONNECT);
+        response.setCode(ResponseCode.OK);
 
-        client.sendEvent(SocketEvents.CONNECT, gson.toJson(response));
+        client.sendEvent(SocketEvents.CONNECT.getValue(), gson.toJson(response));
 
         this.logger.exit();
     }
@@ -121,7 +123,7 @@ final class Server {
     private void disconnectEventHandler(final SocketIOClient client) {
         this.logger.entry(client);
 
-        this.logEvent(SocketEvents.DISCONNECT, client.getSessionId().toString());
+        this.logEvent(SocketEvents.DISCONNECT.getValue(), client.getSessionId().toString());
 
         this.logger.exit();
     }
@@ -131,7 +133,7 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
 
-        this.logEvent(SocketEvents.VERSION, sessionId);
+        this.logEvent(SocketEvents.VERSION.getValue(), sessionId);
 
         final var response = new Response();
         final var gson = new Gson();
@@ -141,8 +143,9 @@ final class Server {
         response.setDateTime(this.getLocalDateTime());
         response.setEvent(SocketEvents.VERSION);
         response.setContent("Handoff daemon version " + Version.VERSION);
+        response.setCode(ResponseCode.OK);
 
-        client.sendEvent(SocketEvents.VERSION, gson.toJson(response));
+        client.sendEvent(SocketEvents.VERSION.getValue(), gson.toJson(response));
 
         this.logger.exit();
     }
@@ -152,7 +155,7 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
 
-        this.logEvent(SocketEvents.STOP, sessionId);
+        this.logEvent(SocketEvents.STOP.getValue(), sessionId);
 
         final var response = new Response();
         final var gson = new Gson();
@@ -162,8 +165,11 @@ final class Server {
         response.setDateTime(this.getLocalDateTime());
         response.setEvent(SocketEvents.STOP);
         response.setContent("Handoff daemon stopping");
+        response.setCode(ResponseCode.OK);
 
-        client.sendEvent(SocketEvents.STOP, gson.toJson(response));
+        client.sendEvent(SocketEvents.STOP.getValue(), gson.toJson(response));
+
+        this.isStopEventReceived = true;
 
         synchronized (this.stopSerializer) {
             this.stopSerializer.notifyAll();
@@ -183,15 +189,19 @@ final class Server {
     private void waitAndStopServer() {
         this.logger.entry();
 
-        synchronized (this.stopSerializer) {
-            try {
-                this.stopSerializer.wait();
-            } catch (final InterruptedException ie) {
-                this.logger.catching(ie);
+        while (!this.isStopEventReceived) {
+            synchronized (this.stopSerializer) {
+                try {
+                    this.stopSerializer.wait();
+                } catch (final InterruptedException ie) {
+                    this.logger.catching(ie);
+
+                    Thread.currentThread().interrupt();
+                }
             }
         }
 
-        this.server.stop();
+        this.socketIOServer.stop();
 
         this.logger.exit();
     }

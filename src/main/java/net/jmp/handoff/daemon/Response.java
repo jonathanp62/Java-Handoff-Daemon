@@ -39,6 +39,9 @@ final class Response {
     @SerializedName("id")
     private String id;
 
+    @SerializedName("requestId")
+    private String requestId;
+
     @SerializedName("sessionId")
     private String sessionId;
 
@@ -51,10 +54,14 @@ final class Response {
     @SerializedName("content")
     private String content;
 
+    @SerializedName("code")
+    private String code;
+
     Response() {
         super();
 
         this.type = "Response";
+        this.requestId = "";
     }
 
     String getId() {
@@ -77,8 +84,8 @@ final class Response {
         return this.event;
     }
 
-    void setEvent(final String event) {
-        this.event = event;
+    void setEvent(final SocketEvents socketEvent) {
+        this.event = socketEvent.getValue();
     }
 
     String getType() {
@@ -99,5 +106,21 @@ final class Response {
 
     void setDateTime(final String dateTime) {
         this.dateTime = dateTime;
+    }
+
+    String getRequestId() {
+        return this.requestId;
+    }
+
+    void setRequestId(final String requestId) {
+        this.requestId = requestId;
+    }
+
+    String getCode() {
+        return this.code;
+    }
+
+    void setCode(final ResponseCode responseCode) {
+        this.code = responseCode.getValue();
     }
 }
