@@ -54,10 +54,20 @@ enum SocketEvents {
         this.descriptor = descriptor;
     }
 
+    /**
+     * Get the enumeration value.
+     *
+     * @return  java.lang.String
+     */
     String getValue() {
         return this.value;
     }
 
+    /**
+     * Get the enumeration descriptor.
+     *
+     * @return  java.lang.String
+     */
     String getDescriptor() {
         return this.descriptor;
     }

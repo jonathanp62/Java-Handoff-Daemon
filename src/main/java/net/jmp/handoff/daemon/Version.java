@@ -30,6 +30,10 @@ package net.jmp.handoff.daemon;
  * SOFTWARE.
  */
 
+/**
+ * The version class.
+ */
 final class Version {
+    /** The version. */
     final static String VERSION = "0.4.0";
 }

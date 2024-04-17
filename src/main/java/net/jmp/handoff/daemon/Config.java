@@ -32,25 +32,50 @@ package net.jmp.handoff.daemon;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * The configuration class.
+ */
 public class Config {
+    /** The host name. */
     @SerializedName("hostname")
     private String hostName;
 
+    /** The port. */
     @SerializedName("port")
     private int port;
 
+    /**
+     * Get the host name.
+     *
+     * @return  java.lang.String
+     */
     String getHostName() {
         return this.hostName;
     }
 
+    /**
+     * Set the host name.
+     *
+     * @param   hostName    java.lang.String
+     */
     void setHostName(final String hostName) {
         this.hostName = hostName;
     }
 
+    /**
+     * Get the port.
+     *
+     * @return  int
+     */
     int getPort() {
         return this.port;
     }
 
+    /**
+     * Set the port.
+     *
+     * @param   port    int
+     */
     void setPort(final int port) {
         this.port = port;
     }

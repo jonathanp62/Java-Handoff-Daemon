@@ -1,7 +1,7 @@
 package net.jmp.handoff.daemon;
 
 /*
- * (#)Response.java 0.4.0   04/13/2024
+ * (#)Request.java  0.4.0   04/17/2024
  *
  * @author    Jonathan Parker
  * @version   0.4.0
@@ -33,24 +33,16 @@ package net.jmp.handoff.daemon;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * The response class.
+ * The request class.
  */
-final class Response {
-    /** The type. It is typically 'Response'. */
+final class Request {
+    /** The type. It is typically 'Request'. */
     @SerializedName("type")
-    private final String type;
-
-    /** The response identifier. */
-    @SerializedName("id")
-    private String id;
+    private String type;
 
     /** The request identifier. */
-    @SerializedName("requestId")
-    private String requestId;
-
-    /** The session identifier. */
-    @SerializedName("sessionId")
-    private String sessionId;
+    @SerializedName("id")
+    private String id;
 
     /** The date and time expressed in ISO-8601. */
     @SerializedName("dateTime")
@@ -64,18 +56,11 @@ final class Response {
     @SerializedName("content")
     private String content;
 
-    /** The response code, typically 'OK' or 'Not OK'. */
-    @SerializedName("code")
-    private String code;
-
     /**
      * The constructor.
      */
-    Response() {
+    Request() {
         super();
-
-        this.type = "Response";
-        this.requestId = "";
     }
 
     /**
@@ -97,24 +82,6 @@ final class Response {
     }
 
     /**
-     * Get the session identifier.
-     *
-     * @return  java.lang.String
-     */
-    String getSessionId() {
-        return this.sessionId;
-    }
-
-    /**
-     * Set the session identifier.
-     *
-     * @param   sessionId   java.lang.String
-     */
-    void setSessionId(final String sessionId) {
-        this.sessionId = sessionId;
-    }
-
-    /**
      * Get the name of the event.
      *
      * @return  java.lang.String
@@ -133,30 +100,21 @@ final class Response {
     }
 
     /**
+     * Set the type.
+     *
+     * @param   type    java.lang.String
+     */
+    void setType(final String type) {
+        this.type = type;
+    }
+
+    /**
      * Get the type, typically 'Response'.
      *
      * @return  java.lang.String
      */
     String getType() {
         return this.type;
-    }
-
-    /**
-     * Get the content, if any.
-     *
-     * @return  java.lang.String
-     */
-    String getContent() {
-        return this.content;
-    }
-
-    /**
-     * Set the content.
-     *
-     * @param   content java.lang.String
-     */
-    void setContent(final String content) {
-        this.content = content;
     }
 
     /**
@@ -178,38 +136,20 @@ final class Response {
     }
 
     /**
-     * Get the request identifier.
+     * Get the content, if any.
      *
      * @return  java.lang.String
      */
-    String getRequestId() {
-        return this.requestId;
+    String getContent() {
+        return this.content;
     }
 
     /**
-     * Set the request identifier.
+     * Set the content.
      *
-     * @param   requestId   java.lang.String
+     * @param   content java.lang.String
      */
-    void setRequestId(final String requestId) {
-        this.requestId = requestId;
-    }
-
-    /**
-     * Get the response code, typically 'OK' or 'Not OK'.
-     *
-     * @return  java.lang.String
-     */
-    String getCode() {
-        return this.code;
-    }
-
-    /**
-     * Set the response code.
-     *
-     * @param   responseCode    net.jmp.handoff.daemon.ResponseCode
-     */
-    void setCode(final ResponseCode responseCode) {
-        this.code = responseCode.getValue();
+    void setContent(final String content) {
+        this.content = content;
     }
 }

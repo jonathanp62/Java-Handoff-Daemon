@@ -46,9 +46,14 @@ import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
 
+/**
+ * The main class.
+ */
 public final class Main {
+    /** The location of the configuration file. */
     private static final String APP_CONFIG_FILE = "config/config.json";
 
+    /** The logger. */
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
 
     /**
@@ -73,6 +78,11 @@ public final class Main {
         this.logger.exit();
     }
 
+    /**
+     * Get the application configuration.
+     *
+     * @return  java.lang.Optional&lt;net.jmp.handoff.daemon.Config&gt;
+     */
     private Optional<Config> getAppConfig() {
         this.logger.entry();
 

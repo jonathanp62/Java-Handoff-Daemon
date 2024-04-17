@@ -47,16 +47,34 @@ import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
 
+/**
+ * The server class.
+ */
 final class Server {
+    /** The logger. */
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
+
+    /** The object with which the stop is serialized. */
     private final Object stopSerializer = new Object();
 
+    /** The host name. */
     private final String hostName;
+
+    /** The port. */
     private final int port;
 
+    /** The socket IO server object. */
     private SocketIOServer socketIOServer;
+
+    /** True whe a stop event is received. */
     private boolean isStopEventReceived;
 
+    /**
+     * The constructor.
+     *
+     * @param   hostName    java.lang.String
+     * @param   port        int
+     */
     Server(final String hostName, final int port) {
         super();
 
@@ -64,6 +82,9 @@ final class Server {
         this.port = port;
     }
 
+    /**
+     * Set up and start the socket IO server.
+     */
     void setupAndRunServer() {
         this.logger.entry();
 
@@ -73,6 +94,9 @@ final class Server {
         this.logger.exit();
     }
 
+    /**
+     * Start the socket IO server.
+     */
     private void startServer() {
         this.logger.entry();
 
@@ -100,6 +124,11 @@ final class Server {
         this.logger.exit();
     }
 
+    /**
+     * The connect event handler.
+     *
+     * @param   client  com.corundumstudio.socketio.SocketIOClient
+     */
     private void connectEventHandler(final SocketIOClient client) {
         this.logger.entry(client);
 
@@ -112,7 +141,7 @@ final class Server {
 
         response.setId(UUID.randomUUID().toString());
         response.setSessionId(sessionId);
-        response.setDateTime(this.getLocalDateTime());
+        response.setDateTime(this.getUTCDateTime());
         response.setEvent(SocketEvents.CONNECT);
         response.setCode(ResponseCode.OK);
 
@@ -121,6 +150,11 @@ final class Server {
         this.logger.exit();
     }
 
+    /**
+     * The disconnect event handler.
+     *
+     * @param   client  com.corundumstudio.socketio.SocketIOClient
+     */
     private void disconnectEventHandler(final SocketIOClient client) {
         this.logger.entry(client);
 
@@ -129,10 +163,17 @@ final class Server {
         this.logger.exit();
     }
 
+    /**
+     * The version event handler.
+     *
+     * @param   client  com.corundumstudio.socketio.SocketIOClient
+     * @param   message java.lang.String
+     */
     private void versionEventHandler(final SocketIOClient client, final String message) {
         this.logger.entry(client, message);
 
         final var sessionId = client.getSessionId().toString();
+        final var request = new Gson().fromJson(message, Request.class);
 
         this.logEvent(SocketEvents.VERSION.getValue(), sessionId, message);
 
@@ -140,9 +181,9 @@ final class Server {
         final var gson = new Gson();
 
         response.setId(UUID.randomUUID().toString());
-        response.setRequestId("Request ID");    // @todo
+        response.setRequestId(request.getId());
         response.setSessionId(sessionId);
-        response.setDateTime(this.getLocalDateTime());
+        response.setDateTime(this.getUTCDateTime());
         response.setEvent(SocketEvents.VERSION);
         response.setContent("Handoff daemon version " + Version.VERSION);
         response.setCode(ResponseCode.OK);
@@ -152,10 +193,17 @@ final class Server {
         this.logger.exit();
     }
 
+    /**
+     * The stop event handler.
+     *
+     * @param   client  com.corundumstudio.socketio.SocketIOClient
+     * @param   message java.lang.String
+     */
     private void stopEventHandler(final SocketIOClient client, final String message) {
         this.logger.entry(client, message);
 
         final var sessionId = client.getSessionId().toString();
+        final var request = new Gson().fromJson(message, Request.class);
 
         this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
 
@@ -163,9 +211,9 @@ final class Server {
         final var gson = new Gson();
 
         response.setId(UUID.randomUUID().toString());
-        response.setRequestId("Request ID");    // @todo
+        response.setRequestId(request.getId());
         response.setSessionId(sessionId);
-        response.setDateTime(this.getLocalDateTime());
+        response.setDateTime(this.getUTCDateTime());
         response.setEvent(SocketEvents.STOP);
         response.setContent("Handoff daemon stopping");
         response.setCode(ResponseCode.OK);
@@ -181,6 +229,13 @@ final class Server {
         this.logger.exit();
     }
 
+    /**
+     * Method to log a received event.
+     *
+     * @param   eventName   java.lang.String
+     * @param   sessionId   java.lang.String
+     * @param   args        java.lang.String[]
+     */
     private void logEvent(final String eventName, final String sessionId, final String ... args) {
         this.logger.entry(eventName, sessionId, args);
 
@@ -197,6 +252,9 @@ final class Server {
         this.logger.exit();
     }
 
+    /**
+     * Wait for and stop the socket IO server.
+     */
     private void waitAndStopServer() {
         this.logger.entry();
 
@@ -217,7 +275,12 @@ final class Server {
         this.logger.exit();
     }
 
-    private String getLocalDateTime() {
+    /**
+     * Get the UTC date time expressed as ISO-8601
+     *
+     * @return  java.lang.String
+     */
+    private String getUTCDateTime() {
         this.logger.entry();
 
         final var formattedDate = ZonedDateTime
