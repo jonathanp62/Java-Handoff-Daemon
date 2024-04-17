@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Version.java  0.5.0   04/17/2024
  * (#)Version.java  0.4.0   04/12/2024
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.5.0
  * @since     0.4.0
  *
  * MIT License
@@ -35,5 +36,5 @@ package net.jmp.handoff.daemon;
  */
 final class Version {
     /** The version. */
-    final static String VERSION = "0.4.0";
+    final static String VERSION = "0.5.0";
 }
