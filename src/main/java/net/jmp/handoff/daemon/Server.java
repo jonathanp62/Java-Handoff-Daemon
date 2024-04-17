@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Server.java   0.5.0   04/17/2024
  * (#)Server.java   0.4.0   04/13/2024
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.5.0
  * @since     0.4.0
  *
  * MIT License
@@ -36,11 +37,17 @@ import com.corundumstudio.socketio.SocketIOServer;
 
 import com.google.gson.Gson;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import java.time.format.DateTimeFormatter;
 
+import java.util.Date;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.slf4j.LoggerFactory;
@@ -176,6 +183,7 @@ final class Server {
         final var request = new Gson().fromJson(message, Request.class);
 
         this.logEvent(SocketEvents.VERSION.getValue(), sessionId, message);
+        this.logRequest(request);
 
         final var response = new Response();
         final var gson = new Gson();
@@ -206,6 +214,7 @@ final class Server {
         final var request = new Gson().fromJson(message, Request.class);
 
         this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
+        this.logRequest(request);
 
         final var response = new Response();
         final var gson = new Gson();
@@ -250,6 +259,72 @@ final class Server {
         }
 
         this.logger.exit();
+    }
+
+    /**
+     * Log the request object.
+     *
+     * @param   request net.jmp.handoff.daemon.Request
+     */
+    private void logRequest(final Request request) {
+        this.logger.entry(request);
+
+        if (this.logger.isDebugEnabled()) {
+            this.logger.debug("Type     : {}", request.getType());
+            this.logger.debug("ID       : {}", request.getId());
+
+            final var localDateTime = this.getLocalDateTime(request.getDateTime());
+
+            if (localDateTime.isPresent())
+                this.logger.debug("Date-Time: {} ({})", request.getDateTime(), localDateTime.get());
+            else
+                this.logger.debug("Date-Time: {}", request.getDateTime());
+
+            this.logger.debug("Event    : {}", request.getEvent());
+
+            if (request.getContent() != null)
+                this.logger.debug("Content  : {}", request.getContent());
+        }
+
+        this.logger.exit();
+    }
+
+    /**
+     * Return a UTC timestamp formatted in local date and time.
+     *
+     * @param   utcDateTime java.lang.String
+     * @return              java.util.Optional&lt;java.lang.String&gt;
+     */
+    private Optional<String> getLocalDateTime(final String utcDateTime) {
+        this.logger.entry(utcDateTime);
+
+        final var utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Date localDate = null;
+
+        try {
+            localDate = utcFormat.parse(utcDateTime);
+        } catch (final ParseException pe) {
+            this.logger.catching(pe);
+        }
+
+        String localDateTimeForatted = null;
+
+        if (localDate != null) {
+            final var localFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+            localDateTimeForatted = localFormat.format(localDate);
+
+            final var timeZone = TimeZone.getDefault();
+
+            localDateTimeForatted = localDateTimeForatted + " (" + timeZone.getDisplayName() + ')';
+        }
+
+        this.logger.exit(localDateTimeForatted);
+
+        return Optional.ofNullable(localDateTimeForatted);
     }
 
     /**
