@@ -36,7 +36,8 @@ import com.corundumstudio.socketio.SocketIOServer;
 
 import com.google.gson.Gson;
 
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 import java.time.format.DateTimeFormatter;
 
@@ -89,10 +90,10 @@ final class Server {
                 this::disconnectEventHandler);  // client -> this.disconnectEventHandler(client))
 
         this.socketIOServer.addEventListener(SocketEvents.VERSION.getValue(), String.class,
-                (client, message, ackRequest) -> this.versionEventHandler(client));
+                (client, message, ackRequest) -> this.versionEventHandler(client, message));
 
         this.socketIOServer.addEventListener(SocketEvents.STOP.getValue(), String.class,
-                (client, message, ackRequest) -> this.stopEventHandler(client));
+                (client, message, ackRequest) -> this.stopEventHandler(client, message));
 
         this.socketIOServer.start();
 
@@ -128,17 +129,18 @@ final class Server {
         this.logger.exit();
     }
 
-    private void versionEventHandler(final SocketIOClient client) {
-        this.logger.entry(client);
+    private void versionEventHandler(final SocketIOClient client, final String message) {
+        this.logger.entry(client, message);
 
         final var sessionId = client.getSessionId().toString();
 
-        this.logEvent(SocketEvents.VERSION.getValue(), sessionId);
+        this.logEvent(SocketEvents.VERSION.getValue(), sessionId, message);
 
         final var response = new Response();
         final var gson = new Gson();
 
         response.setId(UUID.randomUUID().toString());
+        response.setRequestId("Request ID");    // @todo
         response.setSessionId(sessionId);
         response.setDateTime(this.getLocalDateTime());
         response.setEvent(SocketEvents.VERSION);
@@ -150,17 +152,18 @@ final class Server {
         this.logger.exit();
     }
 
-    private void stopEventHandler(final SocketIOClient client ) {
-        this.logger.entry(client);
+    private void stopEventHandler(final SocketIOClient client, final String message) {
+        this.logger.entry(client, message);
 
         final var sessionId = client.getSessionId().toString();
 
-        this.logEvent(SocketEvents.STOP.getValue(), sessionId);
+        this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
 
         final var response = new Response();
         final var gson = new Gson();
 
         response.setId(UUID.randomUUID().toString());
+        response.setRequestId("Request ID");    // @todo
         response.setSessionId(sessionId);
         response.setDateTime(this.getLocalDateTime());
         response.setEvent(SocketEvents.STOP);
@@ -182,6 +185,14 @@ final class Server {
         this.logger.entry(eventName, sessionId, args);
 
         this.logger.info("Client sent {} event: {}", eventName, sessionId);
+
+        if (args.length > 0) {
+            if (this.logger.isInfoEnabled()) {
+                for (final var arg : args) {
+                    this.logger.info("Client arg: {}", arg);
+                }
+            }
+        }
 
         this.logger.exit();
     }
@@ -209,9 +220,9 @@ final class Server {
     private String getLocalDateTime() {
         this.logger.entry();
 
-        final var localDateTime = LocalDateTime.now();
-        final var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        final var formattedDate = localDateTime.format(formatter);
+        final var formattedDate = ZonedDateTime
+                .now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX"));
 
         this.logger.exit(formattedDate);
 
