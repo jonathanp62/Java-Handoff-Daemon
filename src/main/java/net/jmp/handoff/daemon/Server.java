@@ -310,21 +310,24 @@ final class Server {
             this.logger.catching(pe);
         }
 
-        String localDateTimeForatted = null;
+        String localDateTimeFormatted = null;
 
         if (localDate != null) {
             final var localFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-            localDateTimeForatted = localFormat.format(localDate);
+            localDateTimeFormatted = localFormat.format(localDate);
 
             final var timeZone = TimeZone.getDefault();
 
-            localDateTimeForatted = localDateTimeForatted + " (" + timeZone.getDisplayName() + ')';
+            if (timeZone.inDaylightTime(localDate))
+                localDateTimeFormatted = localDateTimeFormatted + " (" + timeZone.getDisplayName().replace("Standard", "Daylight") + ')';
+            else
+                localDateTimeFormatted = localDateTimeFormatted + " (" + timeZone.getDisplayName() + ')';
         }
 
-        this.logger.exit(localDateTimeForatted);
+        this.logger.exit(localDateTimeFormatted);
 
-        return Optional.ofNullable(localDateTimeForatted);
+        return Optional.ofNullable(localDateTimeFormatted);
     }
 
     /**
