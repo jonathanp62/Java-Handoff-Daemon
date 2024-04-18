@@ -1,11 +1,12 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)SocketEvents.java 0.5.0   04/18/2024
  * (#)SocketEvents.java 0.4.0   04/13/2024
  * (#)SocketEvents.java 0.2.0   04/12/2024
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.5.0
  * @since     0.2.0
  *
  * MIT License
@@ -34,6 +35,7 @@ package net.jmp.handoff.daemon;
 enum SocketEvents {
     CONNECT     (Constants.CONNECT,     Constants.CONNECT),
     DISCONNECT  (Constants.DISCONNECT,  Constants.DISCONNECT),
+    ECHO        (Constants.ECHO,        Constants.ECHO),
     STOP        (Constants.STOP,        Constants.STOP),
     VERSION     (Constants.VERSION,     Constants.VERSION);
 
@@ -88,6 +90,7 @@ enum SocketEvents {
     static class Constants {
         static final String CONNECT     = "EVENT_CONNECT";
         static final String DISCONNECT  = "EVENT_DISCONNECT";
+        static final String ECHO        = "ECHO";
         static final String STOP        = "STOP";
         static final String VERSION     = "VERSION";
 

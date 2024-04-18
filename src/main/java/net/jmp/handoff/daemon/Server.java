@@ -120,11 +120,14 @@ final class Server {
         this.socketIOServer.addDisconnectListener(
                 this::disconnectEventHandler);  // client -> this.disconnectEventHandler(client))
 
-        this.socketIOServer.addEventListener(SocketEvents.VERSION.getValue(), String.class,
-                (client, message, ackRequest) -> this.versionEventHandler(client, message));
+        this.socketIOServer.addEventListener(SocketEvents.ECHO.getValue(), String.class,
+                (client, message, ackRequest) -> this.echoEventHandler(client, message));
 
         this.socketIOServer.addEventListener(SocketEvents.STOP.getValue(), String.class,
                 (client, message, ackRequest) -> this.stopEventHandler(client, message));
+
+        this.socketIOServer.addEventListener(SocketEvents.VERSION.getValue(), String.class,
+                (client, message, ackRequest) -> this.versionEventHandler(client, message));
 
         this.socketIOServer.start();
 
@@ -234,6 +237,37 @@ final class Server {
         synchronized (this.stopSerializer) {
             this.stopSerializer.notifyAll();
         }
+
+        this.logger.exit();
+    }
+
+    /**
+     * The echo event handler.
+     *
+     * @param   client  com.corundumstudio.socketio.SocketIOClient
+     * @param   message java.lang.String
+     */
+    private void echoEventHandler(final SocketIOClient client, final String message) {
+        this.logger.entry(client, message);
+
+        final var sessionId = client.getSessionId().toString();
+        final var request = new Gson().fromJson(message, Request.class);
+
+        this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
+        this.logRequest(request);
+
+        final var response = new Response();
+        final var gson = new Gson();
+
+        response.setId(UUID.randomUUID().toString());
+        response.setRequestId(request.getId());
+        response.setSessionId(sessionId);
+        response.setDateTime(this.getUTCDateTime());
+        response.setEvent(SocketEvents.ECHO);
+        response.setContent("Echo: " + request.getContent());
+        response.setCode(ResponseCode.OK);
+
+        client.sendEvent(SocketEvents.ECHO.getValue(), gson.toJson(response));
 
         this.logger.exit();
     }
