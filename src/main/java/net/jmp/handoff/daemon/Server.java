@@ -1,11 +1,12 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Server.java   0.6.0   04/19/2024
  * (#)Server.java   0.5.0   04/17/2024
  * (#)Server.java   0.4.0   04/13/2024
  *
  * @author    Jonathan Parker
- * @version   0.5.0
+ * @version   0.6.0
  * @since     0.4.0
  *
  * MIT License
@@ -32,6 +33,7 @@ package net.jmp.handoff.daemon;
  */
 
 import com.corundumstudio.socketio.Configuration;
+import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 
@@ -46,6 +48,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -108,26 +111,40 @@ final class Server {
         this.logger.entry();
 
         final var socketIoConfig = new Configuration();
+        final var socketConfig = new SocketConfig();
+
+        socketConfig.setReuseAddress(true);
 
         socketIoConfig.setPort(this.port);
         socketIoConfig.setHostname(this.hostName);
+        socketIoConfig.setSocketConfig(socketConfig);
 
         this.socketIOServer = new SocketIOServer(socketIoConfig);
 
         this.socketIOServer.addConnectListener(
                 this::connectEventHandler);     // client -> this.connectEventHandler(client));
 
+        this.logger.debug("Added connect listener");
+
         this.socketIOServer.addDisconnectListener(
                 this::disconnectEventHandler);  // client -> this.disconnectEventHandler(client))
+
+        this.logger.debug("Added disconnect listener");
 
         this.socketIOServer.addEventListener(SocketEvents.ECHO.getValue(), String.class,
                 (client, message, ackRequest) -> this.echoEventHandler(client, message));
 
+        this.logger.debug("Added {} listener", SocketEvents.ECHO.getValue());
+
         this.socketIOServer.addEventListener(SocketEvents.STOP.getValue(), String.class,
                 (client, message, ackRequest) -> this.stopEventHandler(client, message));
 
+        this.logger.debug("Added {} listener", SocketEvents.STOP.getValue());
+
         this.socketIOServer.addEventListener(SocketEvents.VERSION.getValue(), String.class,
                 (client, message, ackRequest) -> this.versionEventHandler(client, message));
+
+        this.logger.debug("Added {} listener", SocketEvents.VERSION.getValue());
 
         this.socketIOServer.start();
 
@@ -381,6 +398,21 @@ final class Server {
                 }
             }
         }
+
+        // Remove the listeners
+
+        final var events = List.of(
+                SocketEvents.ECHO.getValue(),
+                SocketEvents.STOP.getValue(),
+                SocketEvents.VERSION.getValue()
+        );
+
+        events.forEach(event -> {
+            this.socketIOServer.removeAllListeners(event);
+            this.logger.debug("Removed {} listener", event);
+        });
+
+        // Stop the server
 
         this.socketIOServer.stop();
 
