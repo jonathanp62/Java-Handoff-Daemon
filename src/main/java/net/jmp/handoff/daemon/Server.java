@@ -213,7 +213,7 @@ final class Server {
         response.setSessionId(sessionId);
         response.setDateTime(this.getUTCDateTime());
         response.setEvent(SocketEvents.VERSION);
-        response.setContent("Handoff daemon version " + Version.VERSION);
+        response.setContent("{\"appName\":\"Handoff Daemon\",\"version\":\"" + Version.VERSION + "\"}");
         response.setCode(ResponseCode.OK);
 
         client.sendEvent(SocketEvents.VERSION.getValue(), gson.toJson(response));
@@ -230,6 +230,7 @@ final class Server {
     private void stopEventHandler(final SocketIOClient client, final String message) {
         this.logger.entry(client, message);
 
+        final var pid = ProcessHandle.current().pid();
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
 
@@ -244,7 +245,7 @@ final class Server {
         response.setSessionId(sessionId);
         response.setDateTime(this.getUTCDateTime());
         response.setEvent(SocketEvents.STOP);
-        response.setContent("Handoff daemon stopping");
+        response.setContent("{\"pid\":" + pid + ",\"message\":\"Handoff daemon stopping\"}");
         response.setCode(ResponseCode.OK);
 
         client.sendEvent(SocketEvents.STOP.getValue(), gson.toJson(response));
@@ -281,7 +282,7 @@ final class Server {
         response.setSessionId(sessionId);
         response.setDateTime(this.getUTCDateTime());
         response.setEvent(SocketEvents.ECHO);
-        response.setContent("Echo: " + request.getContent());
+        response.setContent("{\"message\":\"Echo: " + request.getContent() + "\"}");
         response.setCode(ResponseCode.OK);
 
         client.sendEvent(SocketEvents.ECHO.getValue(), gson.toJson(response));

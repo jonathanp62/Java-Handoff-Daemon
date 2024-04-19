@@ -1,5 +1,53 @@
 = Handoff Daemon
 
-This daemon program consumes and handles command line arguments transmitted to it from a Node.js client program.
+This daemon program consumes and handles command line arguments transmitted to it from Handoff Node.js client program.
 
-=== Current version: 0.1.0.
+The program uses SocketIO to establish an HTTP server and listen for events.
+
+== Configuration Settings
+
+The configuration is expressed in JSON and is supplied in config/config.json.
+
+* *HostName* The name of the host that the SocketIO server is listening on
+* *Port* The number of the port that the SocketIO server is listening on
+
+== Logging
+
+Logging is achieved using the SLF4J facade over Logback. The logging configuration is supplied in config/logback.xml.
+
+== Events
+
+* *Connect* Driven when the server receives a request from a client to connect. An EVENT_CONNECT event is returned to the client along with a JSON response.
+
+* *Disconnect* Driven when the server receives a request to disconnect from a client. Nothing is returned to the client.
+
+* *ECHO* Driven when the server receives a request to echo the content in the JSON request back to the client in a JSON response.
+
+* *STOP* Driven when the server receives a request to stop in the JSON request. A JSON response is returned to the client.
+
+* *VERSION* Driven when the server receives a request to return its version to the client. The version is returned in the JSON response.
+
+== JSON Request
+
+The JSON request contains the following fields:
+
+* Type ("Request")
+* ID (A UUID string)
+* DateTime (The UTC date and time expressed as a string in ISO-8601 format)
+* Event (The string name of the event)
+* Content (A string of content)
+
+== JSON Response
+
+The JSON request contains the following fields:
+
+* Type ("Response")
+* ID (A UUID string)
+* Request ID (A UUID string)
+* Session ID (A UUID string)
+* DateTime (The UTC date and time expressed as a string in ISO-8601 format)
+* Event (The string name of the event)
+* Content (A string of content)
+* Code ("OK" or "Not OK")
+
+=== Current version: 0.6.0.
