@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Response.java 0.6.0   04/20/2024
  * (#)Response.java 0.4.0   04/13/2024
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.6.0
  * @since     0.4.0
  *
  * MIT License
@@ -62,7 +63,7 @@ final class Response {
 
     /** The content, if any. */
     @SerializedName("content")
-    private String content;
+    private Content content;
 
     /** The response code, typically 'OK' or 'Not OK'. */
     @SerializedName("code")
@@ -76,6 +77,33 @@ final class Response {
 
         this.type = "Response";
         this.requestId = "";
+    }
+
+    /**
+     * A constructor that takes a builder.
+     *
+     * @param   builder net.jmp.handoff.daemon.Response.ResponseBuilder
+     */
+    Response(final ResponseBuilder builder) {
+        super();
+
+        this.type = "Response";
+        this.id = builder.id;
+        this.requestId = builder.requestId;
+        this.sessionId = builder.sessionId;
+        this.dateTime = builder.dateTime;
+        this.event = builder.event.getValue();
+        this.content = builder.content;
+        this.code = builder.code.getValue();
+    }
+
+    /**
+     * Get the builder.
+     *
+     * @return  net.jmp.handoff.daemon.Response.ResponseBuilder
+     */
+    static ResponseBuilder getBuilder() {
+        return new ResponseBuilder();
     }
 
     /**
@@ -144,18 +172,18 @@ final class Response {
     /**
      * Get the content, if any.
      *
-     * @return  java.lang.String
+     * @return  net.jmp.handoff.daemon.Content
      */
-    String getContent() {
+    Content getContent() {
         return this.content;
     }
 
     /**
      * Set the content.
      *
-     * @param   content java.lang.String
+     * @param   content net.jmp.handoff.daemon.Content
      */
-    void setContent(final String content) {
+    void setContent(final Content content) {
         this.content = content;
     }
 
@@ -211,5 +239,126 @@ final class Response {
      */
     void setCode(final ResponseCode responseCode) {
         this.code = responseCode.getValue();
+    }
+
+    /**
+     * A class that uses the builder pattern
+     * to construct new instances of the
+     * response object.
+     */
+    static class ResponseBuilder {
+        /** The response identifier. */
+        private String id;
+
+        /** The request identifier. */
+        private String requestId;
+
+        /** The session identifier. */
+        private String sessionId;
+
+        /** The date and time expressed in ISO-8601. */
+        private String dateTime;
+
+        /** The name of the event. */
+        private SocketEvents event;
+
+        /** The content, if any. */
+        private Content content;
+
+        /** The response code, typically 'OK' or 'Not OK'. */
+        private ResponseCode code;
+
+        /**
+         * The default constructor.
+         */
+        private ResponseBuilder() {
+            super();
+        }
+
+        /**
+         * Set the response identifier.
+         *
+         * @param   id  java.lang.String
+         */
+        ResponseBuilder id(final String id) {
+            this.id = id;
+
+            return this;
+        }
+
+        /**
+         * Set the request identifier.
+         *
+         * @param   requestId   java.lang.String
+         */
+        ResponseBuilder requestId(final String requestId) {
+            this.requestId = requestId;
+
+            return this;
+        }
+
+        /**
+         * Set the session identifier.
+         *
+         * @param   sessionId   java.lang.String
+         */
+        ResponseBuilder sessionId(final String sessionId) {
+            this.sessionId = sessionId;
+
+            return this;
+        }
+
+        /**
+         * Set the date and time expressed in ISO-8601.
+         *
+         * @param   dateTime    java.lang.String
+         */
+        ResponseBuilder dateTime(final String dateTime) {
+            this.dateTime = dateTime;
+
+            return this;
+        }
+
+        /**
+         * Set the event.
+         *
+         * @param   event   net.jmp.handoff.daemon.SocketEvents
+         */
+        ResponseBuilder event(final SocketEvents event) {
+            this.event = event;
+
+            return this;
+        }
+
+        /**
+         * Set the content.
+         *
+         * @param   content net.jmp.handoff.daemon.Content
+         */
+        ResponseBuilder content(final Content content) {
+            this.content = content;
+
+            return this;
+        }
+
+        /**
+         * Set the code.
+         *
+         * @param   code    net.jmp.handoff.daemon.ResponseCode
+         */
+        ResponseBuilder code(final ResponseCode code) {
+            this.code = code;
+
+            return this;
+        }
+
+        /**
+         * Build and return the new instance.
+         *
+         * @return  net.jmp.handoff.daemon.Response
+         */
+        Response build() {
+            return new Response(this);
+        }
     }
 }

@@ -148,6 +148,9 @@ final class Server {
 
         this.socketIOServer.start();
 
+        if (this.logger.isInfoEnabled())
+            this.logger.info("SocketIO server started on PID: {}", ProcessHandle.current().pid());
+
         this.logger.exit();
     }
 
@@ -201,22 +204,25 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
+        final var content = new VersionContent();
+
+        content.setAppName("Handoff Daemon");
+        content.setAppVersion(Version.VERSION);
 
         this.logEvent(SocketEvents.VERSION.getValue(), sessionId, message);
         this.logRequest(request);
 
-        final var response = new Response();
-        final var gson = new Gson();
+        final var response = Response.getBuilder()
+                .id(UUID.randomUUID().toString())
+                .requestId(request.getId())
+                .sessionId(sessionId)
+                .dateTime(this.getUTCDateTime())
+                .event(SocketEvents.VERSION)
+                .content(content)
+                .code(ResponseCode.OK)
+                .build();
 
-        response.setId(UUID.randomUUID().toString());
-        response.setRequestId(request.getId());
-        response.setSessionId(sessionId);
-        response.setDateTime(this.getUTCDateTime());
-        response.setEvent(SocketEvents.VERSION);
-        response.setContent("{\"appName\":\"Handoff Daemon\",\"version\":\"" + Version.VERSION + "\"}");
-        response.setCode(ResponseCode.OK);
-
-        client.sendEvent(SocketEvents.VERSION.getValue(), gson.toJson(response));
+        client.sendEvent(SocketEvents.VERSION.getValue(), new Gson().toJson(response));
 
         this.logger.exit();
     }
@@ -230,25 +236,27 @@ final class Server {
     private void stopEventHandler(final SocketIOClient client, final String message) {
         this.logger.entry(client, message);
 
-        final var pid = ProcessHandle.current().pid();
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
+        final var content = new StopContent();
+
+        content.setMessage("Handoff daemon stopping");
+        content.setPid(ProcessHandle.current().pid());
 
         this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
         this.logRequest(request);
 
-        final var response = new Response();
-        final var gson = new Gson();
+        final var response = Response.getBuilder()
+                .id(UUID.randomUUID().toString())
+                .requestId(request.getId())
+                .sessionId(sessionId)
+                .dateTime(this.getUTCDateTime())
+                .event(SocketEvents.STOP)
+                .content(content)
+                .code(ResponseCode.OK)
+                .build();
 
-        response.setId(UUID.randomUUID().toString());
-        response.setRequestId(request.getId());
-        response.setSessionId(sessionId);
-        response.setDateTime(this.getUTCDateTime());
-        response.setEvent(SocketEvents.STOP);
-        response.setContent("{\"pid\":" + pid + ",\"message\":\"Handoff daemon stopping\"}");
-        response.setCode(ResponseCode.OK);
-
-        client.sendEvent(SocketEvents.STOP.getValue(), gson.toJson(response));
+        client.sendEvent(SocketEvents.STOP.getValue(), new Gson().toJson(response));
 
         this.isStopEventReceived = true;
 
@@ -270,22 +278,24 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
+        final var content = new EchoContent();
+
+        content.setMessage("Echo: " + request.getContent());
 
         this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
         this.logRequest(request);
 
-        final var response = new Response();
-        final var gson = new Gson();
+        final var response = Response.getBuilder()
+                .id(UUID.randomUUID().toString())
+                .requestId(request.getId())
+                .sessionId(sessionId)
+                .dateTime(this.getUTCDateTime())
+                .event(SocketEvents.ECHO)
+                .content(content)
+                .code(ResponseCode.OK)
+                .build();
 
-        response.setId(UUID.randomUUID().toString());
-        response.setRequestId(request.getId());
-        response.setSessionId(sessionId);
-        response.setDateTime(this.getUTCDateTime());
-        response.setEvent(SocketEvents.ECHO);
-        response.setContent("{\"message\":\"Echo: " + request.getContent() + "\"}");
-        response.setCode(ResponseCode.OK);
-
-        client.sendEvent(SocketEvents.ECHO.getValue(), gson.toJson(response));
+        client.sendEvent(SocketEvents.ECHO.getValue(), new Gson().toJson(response));
 
         this.logger.exit();
     }
