@@ -166,16 +166,15 @@ final class Server {
 
         this.logEvent(SocketEvents.CONNECT.getValue(), sessionId);
 
-        final var response = new Response();
-        final var gson = new Gson();
+        final var response = Response.getBuilder()
+                .id(UUID.randomUUID().toString())
+                .sessionId(sessionId)
+                .dateTime(this.getUTCDateTime())
+                .event(SocketEvents.CONNECT)
+                .code(ResponseCode.OK)
+                .build();
 
-        response.setId(UUID.randomUUID().toString());
-        response.setSessionId(sessionId);
-        response.setDateTime(this.getUTCDateTime());
-        response.setEvent(SocketEvents.CONNECT);
-        response.setCode(ResponseCode.OK);
-
-        client.sendEvent(SocketEvents.CONNECT.getValue(), gson.toJson(response));
+        client.sendEvent(SocketEvents.CONNECT.getValue(), new Gson().toJson(response));
 
         this.logger.exit();
     }
