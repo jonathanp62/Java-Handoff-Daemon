@@ -76,6 +76,7 @@ dependencies {
     implementation libs.com.google.code.gson.gson
     implementation libs.org.slf4j.slf4j.api
     implementation libs.org.slf4j.slf4j.ext
+    testImplementation libs.io.socket.socket.io.client
     testImplementation libs.junit.junit
 }
 

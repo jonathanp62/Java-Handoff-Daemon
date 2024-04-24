@@ -309,7 +309,7 @@ final class Server {
     private void logEvent(final String eventName, final String sessionId, final String ... args) {
         this.logger.entry(eventName, sessionId, args);
 
-        this.logger.info("Client sent {} event: {}", eventName, sessionId);
+        this.logger.info("Client sent {} event: Session ID: {}", eventName, sessionId);
 
         if (args.length > 0) {
             if (this.logger.isInfoEnabled()) {
