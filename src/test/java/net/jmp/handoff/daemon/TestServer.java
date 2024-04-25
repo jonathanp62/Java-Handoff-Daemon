@@ -44,6 +44,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -93,6 +94,7 @@ public class TestServer {
     @AfterClass
     public static void afterClass() throws Throwable {
         if (serverThread != null) {
+            final var stopSemaphore = new Semaphore(1);
             final var stopSerializer = new Object();
 
             final var options = new IO.Options();
@@ -101,6 +103,7 @@ public class TestServer {
             options.timeout = 5000;
             options.transports = new String[1];
             options.transports[0] = "websocket";
+            options.forceNew = false;
 
             final var socket = IO.socket(SERVER_URL, options);
 
@@ -110,14 +113,22 @@ public class TestServer {
                 for (final var object : objects)
                     System.out.println("Object: " + object.toString());
 
-                final var request = new Request();
+                if (socket.connected()) {
+                    System.out.println("Socket is connected");
 
-                request.setType("Request");
-                request.setId(UUID.randomUUID().toString());
-                request.setDateTime(getUTCDateTime());
-                request.setEvent(SocketEvents.STOP);
+                    if (stopSemaphore.tryAcquire()) {
+                        final var request = new Request();
 
-                socket.emit(SocketEvents.STOP.getValue(), new Gson().toJson(request));
+                        request.setType("Request");
+                        request.setId(UUID.randomUUID().toString());
+                        request.setDateTime(getUTCDateTime());
+                        request.setEvent(SocketEvents.STOP);
+
+                        socket.emit(SocketEvents.STOP.getValue(), new Gson().toJson(request));
+                    }
+                } else {
+                    System.out.println("Socket is not yet connected");
+                }
             });
 
             socket.on(SocketEvents.DISCONNECT.getValue(), args -> {
@@ -139,8 +150,6 @@ public class TestServer {
             });
 
             socket.connect();
-
-            System.out.println("Socket connected");
 
             while (true) {
                 synchronized (stopSerializer) {
