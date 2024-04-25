@@ -44,14 +44,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import java.util.concurrent.Semaphore;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * The server test class.
@@ -96,6 +98,7 @@ public class TestServer {
         if (serverThread != null) {
             final var stopSemaphore = new Semaphore(1);
             final var stopSerializer = new Object();
+            final var isStopEventHandled = new AtomicBoolean(false);
 
             final var options = new IO.Options();
 
@@ -143,6 +146,8 @@ public class TestServer {
                 for (final var arg : args)
                     System.out.println("Arg: " + arg.toString());
 
+                isStopEventHandled.compareAndSet(false, true);
+
                 synchronized (stopSerializer) {
                     stopSerializer.notifyAll();
                 }
@@ -150,7 +155,7 @@ public class TestServer {
 
             socket.connect();
 
-            while (true) {
+            while (!isStopEventHandled.get()) {
                 synchronized (stopSerializer) {
                     try {
                         stopSerializer.wait();
@@ -158,8 +163,6 @@ public class TestServer {
                         ie.printStackTrace(System.err);
                         Thread.currentThread().interrupt();
                     }
-
-                    break;
                 }
             }
 
@@ -177,6 +180,108 @@ public class TestServer {
 
             serverThread = null;
         }
+    }
+
+    @Test
+    public void testEchoEvent() throws Throwable {
+        assertNotNull(serverThread);
+
+        final var echoSemaphore = new Semaphore(1);
+        final var echoSerializer = new Object();
+        final var isEchoEventHandled = new AtomicBoolean(false);
+
+        final var options = new IO.Options();
+
+        options.forceNew = false;
+        options.reconnection = true;
+        options.timeout = 5000;
+        options.transports = new String[1];
+        options.transports[0] = "websocket";
+
+        final var socket = IO.socket(SERVER_URL, options);
+
+        socket.on(SocketEvents.CONNECT.getValue(), objects -> {
+            System.out.println("Server sent " + SocketEvents.CONNECT.getValue() + " event");
+
+            for (final var object : objects)
+                System.out.println("Object: " + object.toString());
+
+            if (socket.connected()) {
+                System.out.println("Socket is connected");
+
+                if (echoSemaphore.tryAcquire()) {
+                    final var request = Request.getBuilder()
+                            .id(UUID.randomUUID().toString())
+                            .dateTime(getUTCDateTime())
+                            .event(SocketEvents.ECHO)
+                            .content("My string to echo back")
+                            .build();
+
+                    socket.emit(SocketEvents.ECHO.getValue(), new Gson().toJson(request));
+                }
+            } else {
+                System.out.println("Socket is not yet connected");
+            }
+        });
+
+        socket.on(SocketEvents.DISCONNECT.getValue(), args -> {
+            System.out.println("Server sent " + SocketEvents.DISCONNECT.getValue() + " event");
+
+            for (final var arg : args)
+                System.out.println("Arg: " + arg.toString());
+        });
+
+        socket.on(SocketEvents.ECHO.getValue(), args -> {
+            System.out.println("Server sent " + SocketEvents.ECHO.getValue() + " event");
+
+            assertEquals(1, args.length);
+
+            try {
+                final var response = new Gson().fromJson(args[0].toString(), EchoResponse.class);
+
+                assertEquals(SocketEvents.ECHO.getValue(), response.event);
+                assertEquals("OK", response.code);
+
+                assertNotNull(response.id);
+                assertNotNull(response.requestId);
+                assertNotNull(response.sessionId);
+                assertNotNull(response.dateTime);
+
+                final var content = response.content;
+
+                assertEquals("Echo", content.getType());
+                assertEquals("Echo: My string to echo back", content.getMessage());
+            } finally {
+                isEchoEventHandled.compareAndSet(false, true);
+
+                synchronized (echoSerializer) {
+                    echoSerializer.notifyAll();
+                }
+            }
+        });
+
+        socket.connect();
+
+        while (!isEchoEventHandled.get()) {
+            synchronized (echoSerializer) {
+                try {
+                    echoSerializer.wait();
+                } catch (final InterruptedException ie) {
+                    ie.printStackTrace(System.err);
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        socket.disconnect();
+        socket.close();
+
+        System.out.println("Socket disconnected and closed");
+    }
+
+    @Test
+    public void testVersionEvent() {
+
     }
 
     @Test
@@ -202,5 +307,37 @@ public class TestServer {
         return ZonedDateTime
                 .now(ZoneOffset.UTC)
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX"));
+    }
+
+    /**
+     * A variation on the response class that
+     * contains a concrete content class for
+     * GSON to deserialize.
+     */
+    static class EchoResponse {
+        String type;
+        String id;
+        String requestId;
+        String sessionId;
+        String dateTime;
+        String event;
+        EchoContent content;
+        String code;
+    }
+
+    /**
+     * A variation on the response class that
+     * contains a concrete content class for
+     * GSON to deserialize.
+     */
+    static class VersionResponse {
+        String type;
+        String id;
+        String requestId;
+        String sessionId;
+        String dateTime;
+        String event;
+        VersionContent content;
+        String code;
     }
 }
