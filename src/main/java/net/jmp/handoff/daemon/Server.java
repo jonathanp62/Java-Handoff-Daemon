@@ -281,7 +281,7 @@ final class Server {
 
         content.setMessage("Echo: " + request.getContent());
 
-        this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
+        this.logEvent(SocketEvents.ECHO.getValue(), sessionId, message);
         this.logRequest(request);
 
         final var response = Response.getBuilder()

@@ -99,11 +99,11 @@ public class TestServer {
 
             final var options = new IO.Options();
 
+            options.forceNew = false;
             options.reconnection = true;
             options.timeout = 5000;
             options.transports = new String[1];
             options.transports[0] = "websocket";
-            options.forceNew = false;
 
             final var socket = IO.socket(SERVER_URL, options);
 
