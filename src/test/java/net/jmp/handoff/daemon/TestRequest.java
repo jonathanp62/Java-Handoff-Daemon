@@ -44,6 +44,8 @@ public class TestRequest {
     private static final Request request = new Request();
     private static final String id = UUID.randomUUID().toString();
 
+    private static Request builtRequest;
+
     @BeforeClass
     public static void beforeClass() {
         request.setContent("the free form text content");
@@ -51,30 +53,42 @@ public class TestRequest {
         request.setId(id);
         request.setDateTime("2024-04-22T20:02:09.952Z");
         request.setType("Request");
+
+        builtRequest = Request.getBuilder()
+                .content("the free form text content")
+                .event(SocketEvents.ECHO)
+                .id(id)
+                .dateTime("2024-04-22T20:02:09.952Z")
+                .build();
     }
 
     @Test
     public void testGetContent() {
         assertEquals("the free form text content", request.getContent());
+        assertEquals("the free form text content", builtRequest.getContent());
     }
 
     @Test
     public void testGetEvent() {
         assertEquals(SocketEvents.ECHO.getValue(), request.getEvent());
+        assertEquals(SocketEvents.ECHO.getValue(), builtRequest.getEvent());
     }
 
     @Test
     public void testGetId() {
         assertEquals(id, request.getId());
+        assertEquals(id, builtRequest.getId());
     }
 
     @Test
     public void testGetDateTime() {
         assertEquals("2024-04-22T20:02:09.952Z", request.getDateTime());
+        assertEquals("2024-04-22T20:02:09.952Z", builtRequest.getDateTime());
     }
 
     @Test
     public void testGetType() {
         assertEquals("Request", request.getType());
+        assertEquals("Request", builtRequest.getType());
     }
 }

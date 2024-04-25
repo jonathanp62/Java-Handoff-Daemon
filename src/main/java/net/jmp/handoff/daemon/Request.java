@@ -64,6 +64,30 @@ final class Request {
     }
 
     /**
+     * A constructor that takes a builder.
+     *
+     * @param   builder net.jmp.handoff.daemon.Request.RequestBuilder
+     */
+    Request(final Request.RequestBuilder builder) {
+        super();
+
+        this.type = "Request";
+        this.id = builder.id;
+        this.dateTime = builder.dateTime;
+        this.event = builder.event;
+        this.content = builder.content;
+    }
+
+    /**
+     * Get the builder.
+     *
+     * @return  net.jmp.handoff.daemon.Request.RequestBuilder
+     */
+    static Request.RequestBuilder getBuilder() {
+        return new Request.RequestBuilder();
+    }
+
+    /**
      * Get the response identifier.
      *
      * @return  java.lang.String
@@ -151,5 +175,84 @@ final class Request {
      */
     void setContent(final String content) {
         this.content = content;
+    }
+
+    /**
+     * A class that uses the builder pattern
+     * to construct new instances of the
+     * request object.
+     */
+    static class RequestBuilder {
+        /** The response identifier. */
+        private String id;
+
+        /** The date and time expressed in ISO-8601. */
+        private String dateTime;
+
+        /** The name of the event. */
+        private String event;
+
+        /** The content, if any. */
+        private String content;
+
+        /**
+         * The default constructor.
+         */
+        private RequestBuilder() {
+            super();
+        }
+
+        /**
+         * Set the response identifier.
+         *
+         * @param   id  java.lang.String
+         */
+        RequestBuilder id(final String id) {
+            this.id = id;
+
+            return this;
+        }
+
+        /**
+         * Set the date and time expressed in ISO-8601.
+         *
+         * @param   dateTime    java.lang.String
+         */
+        RequestBuilder dateTime(final String dateTime) {
+            this.dateTime = dateTime;
+
+            return this;
+        }
+
+        /**
+         * Set the event.
+         *
+         * @param   event   net.jmp.handoff.daemon.SocketEvents
+         */
+        RequestBuilder event(final SocketEvents event) {
+            this.event = event.getValue();
+
+            return this;
+        }
+
+        /**
+         * Set the content.
+         *
+         * @param   content net.jmp.handoff.daemon.Content
+         */
+        RequestBuilder content(final String content) {
+            this.content = content;
+
+            return this;
+        }
+
+        /**
+         * Build and return the new instance.
+         *
+         * @return  net.jmp.handoff.daemon.Request
+         */
+        Request build() {
+            return new Request(this);
+        }
     }
 }

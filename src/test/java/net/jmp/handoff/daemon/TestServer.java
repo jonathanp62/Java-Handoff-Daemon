@@ -117,12 +117,11 @@ public class TestServer {
                     System.out.println("Socket is connected");
 
                     if (stopSemaphore.tryAcquire()) {
-                        final var request = new Request();
-
-                        request.setType("Request");
-                        request.setId(UUID.randomUUID().toString());
-                        request.setDateTime(getUTCDateTime());
-                        request.setEvent(SocketEvents.STOP);
+                        final var request = Request.getBuilder()
+                                .id(UUID.randomUUID().toString())
+                                .dateTime(getUTCDateTime())
+                                .event(SocketEvents.STOP)
+                                .build();
 
                         socket.emit(SocketEvents.STOP.getValue(), new Gson().toJson(request));
                     }
