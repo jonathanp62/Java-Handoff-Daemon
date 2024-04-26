@@ -254,8 +254,62 @@ public class TestServer {
     }
 
     @Test
-    public void testVersionEvent() {
+    public void testVersionEvent() throws Throwable {
+        assertNotNull(serverThread);
 
+        final var versionSemaphore = new Semaphore(1);
+        final var versionSerializer = new Object();
+        final var isVersionEventHandled = new AtomicBoolean(false);
+
+        final var socket = IO.socket(SERVER_URL, setAndGetSocketOptions());
+
+        socket.on(SocketEvents.CONNECT.getValue(), objects -> {
+            logEvent(SocketEvents.CONNECT.getValue(), false, objects);
+
+            if (versionSemaphore.tryAcquire()) {
+                final var request = Request.getBuilder()
+                        .id(UUID.randomUUID().toString())
+                        .dateTime(getUTCDateTime())
+                        .event(SocketEvents.VERSION)
+                        .build();
+
+                socket.emit(SocketEvents.VERSION.getValue(), new Gson().toJson(request));
+            }
+        });
+
+        setDisconnectEventHandler(socket);
+
+        socket.on(SocketEvents.VERSION.getValue(), args -> {
+            logEvent(SocketEvents.VERSION.getValue(), true, args);
+
+            assertEquals(1, args.length);
+
+            try {
+                final var response = new Gson().fromJson(args[0].toString(), VersionResponse.class);
+
+                assertEquals(SocketEvents.VERSION.getValue(), response.event);
+                assertEquals("OK", response.code);
+
+                assertNotNull(response.id);
+                assertNotNull(response.requestId);
+                assertNotNull(response.sessionId);
+                assertNotNull(response.dateTime);
+
+                final var content = response.content;
+
+                assertEquals("Version", content.getType());
+                assertEquals("Handoff Daemon", content.getAppName());
+                assertEquals(Version.VERSION, content.getAppVersion());
+            } finally {
+                isVersionEventHandled.compareAndSet(false, true);
+
+                synchronized (versionSerializer) {
+                    versionSerializer.notifyAll();
+                }
+            }
+        });
+
+        connectAndWait(socket, isVersionEventHandled, versionSerializer);
     }
 
     @Test
