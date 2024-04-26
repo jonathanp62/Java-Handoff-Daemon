@@ -50,4 +50,4 @@ The JSON request contains the following fields:
 * Content (A string of content)
 * Code ("OK" or "Not OK")
 
-=== Current version: 0.6.0.
+=== Current version: 0.7.0.
