@@ -49,16 +49,22 @@ import java.util.concurrent.Semaphore;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.socket.client.Socket;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import org.slf4j.LoggerFactory;
+
+import org.slf4j.ext.XLogger;
+
 /**
  * The server test class.
  */
 public class TestServer {
+    private static final XLogger LOGGER = new XLogger(LoggerFactory.getLogger(TestServer.class.getName()));
     private static final String SERVER_URL = "http://localhost:10130";
 
     private static Thread serverThread;
@@ -77,20 +83,67 @@ public class TestServer {
                     String line;
 
                     while ((line = processOutputReader.readLine()) != null) {
-                        System.out.println(line);
+                        LOGGER.debug(line);
                     }
 
                     process.waitFor();
                 } catch (final InterruptedException ie) {
-                    ie.printStackTrace(System.err);
+                    LOGGER.catching(ie);
                     Thread.currentThread().interrupt();     // Restore the interrupt status
                 }
             } catch (final IOException ioe) {
-                ioe.printStackTrace(System.err);
+                LOGGER.catching(ioe);
             }
         });
 
         serverThread.start();
+    }
+
+    private static void setDisconnectEventHandler(final Socket socket) {
+        socket.on(SocketEvents.DISCONNECT.getValue(), args -> {
+            logEvent(SocketEvents.DISCONNECT.getValue(), true, args);
+        });
+    }
+
+    private static IO.Options setAndGetSocketOptions() {
+        final var options = new IO.Options();
+
+        options.forceNew = false;
+        options.reconnection = true;
+        options.timeout = 5000;
+        options.transports = new String[1];
+        options.transports[0] = "websocket";
+
+        return options;
+    }
+
+    private static void logEvent(final String event, final boolean isArg, final Object... objects) {
+        LOGGER.debug("Server sent {} event", event);
+
+        for (final var object : objects) {
+            if (isArg)
+                LOGGER.debug("Arg: {}", object.toString());
+            else
+                LOGGER.debug("Object: {}", object.toString());
+        }
+    }
+
+    private static void connectAndWait(final Socket socket, final AtomicBoolean isEventHandled, final Object serializer) {
+        socket.connect();
+
+        while (!isEventHandled.get()) {
+            synchronized (serializer) {
+                try {
+                    serializer.wait();
+                } catch (final InterruptedException ie) {
+                    LOGGER.catching(ie);
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        socket.disconnect();
+        socket.close();
     }
 
     @AfterClass
@@ -100,51 +153,26 @@ public class TestServer {
             final var stopSerializer = new Object();
             final var isStopEventHandled = new AtomicBoolean(false);
 
-            final var options = new IO.Options();
-
-            options.forceNew = false;
-            options.reconnection = true;
-            options.timeout = 5000;
-            options.transports = new String[1];
-            options.transports[0] = "websocket";
-
-            final var socket = IO.socket(SERVER_URL, options);
+            final var socket = IO.socket(SERVER_URL, setAndGetSocketOptions());
 
             socket.on(SocketEvents.CONNECT.getValue(), objects -> {
-                System.out.println("Server sent " + SocketEvents.CONNECT.getValue() + " event");
+                logEvent(SocketEvents.CONNECT.getValue(), false, objects);
 
-                for (final var object : objects)
-                    System.out.println("Object: " + object.toString());
+                if (stopSemaphore.tryAcquire()) {
+                    final var request = Request.getBuilder()
+                            .id(UUID.randomUUID().toString())
+                            .dateTime(getUTCDateTime())
+                            .event(SocketEvents.STOP)
+                            .build();
 
-                if (socket.connected()) {
-                    System.out.println("Socket is connected");
-
-                    if (stopSemaphore.tryAcquire()) {
-                        final var request = Request.getBuilder()
-                                .id(UUID.randomUUID().toString())
-                                .dateTime(getUTCDateTime())
-                                .event(SocketEvents.STOP)
-                                .build();
-
-                        socket.emit(SocketEvents.STOP.getValue(), new Gson().toJson(request));
-                    }
-                } else {
-                    System.out.println("Socket is not yet connected");
+                    socket.emit(SocketEvents.STOP.getValue(), new Gson().toJson(request));
                 }
             });
 
-            socket.on(SocketEvents.DISCONNECT.getValue(), args -> {
-                System.out.println("Server sent " + SocketEvents.DISCONNECT.getValue() + " event");
-
-                for (final var arg : args)
-                    System.out.println("Arg: " + arg.toString());
-            });
+            setDisconnectEventHandler(socket);
 
             socket.on(SocketEvents.STOP.getValue(), args -> {
-                System.out.println("Server sent " + SocketEvents.STOP.getValue() + " event");
-
-                for (final var arg : args)
-                    System.out.println("Arg: " + arg.toString());
+                logEvent(SocketEvents.STOP.getValue(), true, args);
 
                 isStopEventHandled.compareAndSet(false, true);
 
@@ -153,28 +181,12 @@ public class TestServer {
                 }
             });
 
-            socket.connect();
-
-            while (!isStopEventHandled.get()) {
-                synchronized (stopSerializer) {
-                    try {
-                        stopSerializer.wait();
-                    } catch (final InterruptedException ie) {
-                        ie.printStackTrace(System.err);
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-
-            socket.disconnect();
-            socket.close();
-
-            System.out.println("Socket disconnected and closed");
+            connectAndWait(socket, isStopEventHandled, stopSerializer);
 
             try {
                 serverThread.join();
             } catch (final InterruptedException ie) {
-                ie.printStackTrace(System.err);
+                LOGGER.catching(ie);
                 Thread.currentThread().interrupt();
             }
 
@@ -190,49 +202,27 @@ public class TestServer {
         final var echoSerializer = new Object();
         final var isEchoEventHandled = new AtomicBoolean(false);
 
-        final var options = new IO.Options();
-
-        options.forceNew = false;
-        options.reconnection = true;
-        options.timeout = 5000;
-        options.transports = new String[1];
-        options.transports[0] = "websocket";
-
-        final var socket = IO.socket(SERVER_URL, options);
+        final var socket = IO.socket(SERVER_URL, setAndGetSocketOptions());
 
         socket.on(SocketEvents.CONNECT.getValue(), objects -> {
-            System.out.println("Server sent " + SocketEvents.CONNECT.getValue() + " event");
+            logEvent(SocketEvents.CONNECT.getValue(), false, objects);
 
-            for (final var object : objects)
-                System.out.println("Object: " + object.toString());
+            if (echoSemaphore.tryAcquire()) {
+                final var request = Request.getBuilder()
+                        .id(UUID.randomUUID().toString())
+                        .dateTime(getUTCDateTime())
+                        .event(SocketEvents.ECHO)
+                        .content("My string to echo back")
+                        .build();
 
-            if (socket.connected()) {
-                System.out.println("Socket is connected");
-
-                if (echoSemaphore.tryAcquire()) {
-                    final var request = Request.getBuilder()
-                            .id(UUID.randomUUID().toString())
-                            .dateTime(getUTCDateTime())
-                            .event(SocketEvents.ECHO)
-                            .content("My string to echo back")
-                            .build();
-
-                    socket.emit(SocketEvents.ECHO.getValue(), new Gson().toJson(request));
-                }
-            } else {
-                System.out.println("Socket is not yet connected");
+                socket.emit(SocketEvents.ECHO.getValue(), new Gson().toJson(request));
             }
         });
 
-        socket.on(SocketEvents.DISCONNECT.getValue(), args -> {
-            System.out.println("Server sent " + SocketEvents.DISCONNECT.getValue() + " event");
-
-            for (final var arg : args)
-                System.out.println("Arg: " + arg.toString());
-        });
+        setDisconnectEventHandler(socket);
 
         socket.on(SocketEvents.ECHO.getValue(), args -> {
-            System.out.println("Server sent " + SocketEvents.ECHO.getValue() + " event");
+            logEvent(SocketEvents.ECHO.getValue(), true, args);
 
             assertEquals(1, args.length);
 
@@ -260,23 +250,7 @@ public class TestServer {
             }
         });
 
-        socket.connect();
-
-        while (!isEchoEventHandled.get()) {
-            synchronized (echoSerializer) {
-                try {
-                    echoSerializer.wait();
-                } catch (final InterruptedException ie) {
-                    ie.printStackTrace(System.err);
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-
-        socket.disconnect();
-        socket.close();
-
-        System.out.println("Socket disconnected and closed");
+        connectAndWait(socket, isEchoEventHandled, echoSerializer);
     }
 
     @Test
