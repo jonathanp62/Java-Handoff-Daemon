@@ -33,6 +33,7 @@ package net.jmp.handoff.daemon;
 import com.google.gson.Gson;
 
 import io.socket.client.IO;
+import io.socket.client.Socket;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -49,7 +50,6 @@ import java.util.concurrent.Semaphore;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.socket.client.Socket;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

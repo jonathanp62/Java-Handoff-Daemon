@@ -1,13 +1,14 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Main.java 0.7.0   05/07/2024
  * (#)Main.java 0.4.0   04/12/2024
  * (#)Main.java 0.3.0   04/12/2024
  * (#)Main.java 0.2.0   04/06/2024
  * (#)Main.java 0.1.0   04/05/2024
  *
  * @author    Jonathan Parker
- * @version   0.4.0
+ * @version   0.7.0
  * @since     0.1.0
  *
  * MIT License
@@ -42,6 +43,8 @@ import java.nio.file.Paths;
 
 import java.util.Optional;
 
+import java.util.regex.Pattern;
+
 import org.slf4j.LoggerFactory;
 
 import org.slf4j.ext.XLogger;
@@ -52,6 +55,9 @@ import org.slf4j.ext.XLogger;
 public final class Main {
     /** The location of the configuration file. */
     private static final String APP_CONFIG_FILE = "config/config.json";
+
+    /** A regular expression pattern to get the port number from a command line argument. */
+    private static final Pattern PORT_PATTERN = Pattern.compile("(?<port>^\\d{1,5}$)");
 
     /** The logger. */
     private final XLogger logger = new XLogger(LoggerFactory.getLogger(this.getClass().getName()));
@@ -65,12 +71,14 @@ public final class Main {
 
     /**
      * The run method.
+     *
+     * @param   port    int
      */
-    private void run() {
-        this.logger.entry();
+    private void run(final int port) {
+        this.logger.entry(port);
 
         this.getAppConfig().ifPresent(appConfig -> {
-            final var server = new Server(appConfig.getHostName(), appConfig.getPort());
+            final var server = new Server(appConfig.getHostName(), (port != 0) ? port : appConfig.getPort());
 
             server.setupAndRunServer();
         });
@@ -105,6 +113,27 @@ public final class Main {
      * @param   arguments   java.lang.String[]
      */
     public static void main(final String[] arguments) {
-        new Main().run();
+        int port = 0;
+
+        if (arguments.length > 0) {
+            final var matcher = PORT_PATTERN.matcher(arguments[0]);
+
+            if (matcher.find()) {
+                final var portStr = matcher.group("port");
+
+                if (portStr != null) {
+                    port = Integer.parseInt(portStr);
+
+                    if (port <= 0 || port > 65535)
+                        throw new IllegalArgumentException("Port must be between 0 and 65535");
+                } else {
+                    System.out.printf("Group 'port' not found in %s%n", arguments[0]);
+                }
+            } else {
+                System.out.printf("Command line argument %s was not recognized as a port number%n", arguments[0]);
+            }
+        }
+
+        new Main().run(port);
     }
 }

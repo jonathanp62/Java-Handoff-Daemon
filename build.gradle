@@ -121,6 +121,16 @@ task execProgram(type: JavaExec) {
     mainClass = javaMainClass
 }
 
+task execProgram10131(type: JavaExec) {
+    allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
+    args '10131'
+    classpath = sourceSets.main.runtimeClasspath
+    description = "Run the main class with JavaExecTask"
+    group = "Execution"
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+    mainClass = javaMainClass
+}
+
 task copyJar(type: Copy) {
     from ("/Users/Maestro/.m2/repository/net/jmp/handoff/daemon/handoff-daemon/${version}") {
         include "handoff-daemon-${version}.jar"
