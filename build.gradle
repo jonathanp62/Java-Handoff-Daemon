@@ -53,11 +53,7 @@ application {
 
 repositories {
     mavenLocal()
-    maven {
-        url = uri('http://localhost:8081/nexus/content/repositories/releases')
-
-        allowInsecureProtocol = true
-    }
+    mavenCentral()  // url = uri('https://repo.maven.apache.org/maven2/')
 
     maven {
         url = uri('http://maven.repository.redhat.com/techpreview/all')
@@ -66,7 +62,9 @@ repositories {
     }
 
     maven {
-        url = uri('https://repo.maven.apache.org/maven2/')
+        url = uri('http://localhost:8081/nexus/content/repositories/releases')
+
+        allowInsecureProtocol = true
     }
 }
 
