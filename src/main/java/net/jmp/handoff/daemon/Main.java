@@ -72,10 +72,12 @@ public final class Main {
     /**
      * The run method.
      *
-     * @param   port    int
+     * @param   args    java.lang.String[]
      */
-    private void run(final int port) {
-        this.logger.entry(port);
+    private void run(final String[] args) {
+        this.logger.entry((Object) args);
+
+        final var port = this.getPortFromArgument(args);
 
         this.getAppConfig().ifPresent(appConfig -> {
             final var server = new Server(appConfig.getHostName(), (port != 0) ? port : appConfig.getPort());
@@ -84,6 +86,41 @@ public final class Main {
         });
 
         this.logger.exit();
+    }
+
+    /**
+     * Return a port number if specified as a command line argument.
+     *
+     * @param   args    java.lang.String[]
+     * @return          int
+     */
+    private int getPortFromArgument(final String[] args) {
+        this.logger.entry((Object) args);
+
+        int port = 0;
+
+        if (args.length > 0) {
+            final var matcher = PORT_PATTERN.matcher(args[0]);
+
+            if (matcher.find()) {
+                final var portStr = matcher.group("port");
+
+                if (portStr != null) {
+                    port = Integer.parseInt(portStr);
+
+                    if (port <= 0 || port > 65535)
+                        throw new IllegalArgumentException("Port must be between 0 and 65535");
+                } else {
+                    this.logger.warn("Group 'port' not found in {}", args[0]);
+                }
+            } else {
+                this.logger.warn("Command line argument {} was not recognized as a port number", args[0]);
+            }
+        }
+
+        this.logger.exit(port);
+
+        return port;
     }
 
     /**
@@ -113,27 +150,6 @@ public final class Main {
      * @param   arguments   java.lang.String[]
      */
     public static void main(final String[] arguments) {
-        int port = 0;
-
-        if (arguments.length > 0) {
-            final var matcher = PORT_PATTERN.matcher(arguments[0]);
-
-            if (matcher.find()) {
-                final var portStr = matcher.group("port");
-
-                if (portStr != null) {
-                    port = Integer.parseInt(portStr);
-
-                    if (port <= 0 || port > 65535)
-                        throw new IllegalArgumentException("Port must be between 0 and 65535");
-                } else {
-                    System.out.printf("Group 'port' not found in %s%n", arguments[0]);
-                }
-            } else {
-                System.out.printf("Command line argument %s was not recognized as a port number%n", arguments[0]);
-            }
-        }
-
-        new Main().run(port);
+        new Main().run(arguments);
     }
 }

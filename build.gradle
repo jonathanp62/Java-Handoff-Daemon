@@ -131,6 +131,36 @@ task execProgram10131(type: JavaExec) {
     mainClass = javaMainClass
 }
 
+task execProgramNotAPort(type: JavaExec) {
+    allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
+    args 'not-a-port'
+    classpath = sourceSets.main.runtimeClasspath
+    description = "Run the main class with JavaExecTask"
+    group = "Execution"
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+    mainClass = javaMainClass
+}
+
+task execProgram0(type: JavaExec) {
+    allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
+    args '0'
+    classpath = sourceSets.main.runtimeClasspath
+    description = "Run the main class with JavaExecTask"
+    group = "Execution"
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+    mainClass = javaMainClass
+}
+
+task execProgram65536(type: JavaExec) {
+    allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
+    args '65536'
+    classpath = sourceSets.main.runtimeClasspath
+    description = "Run the main class with JavaExecTask"
+    group = "Execution"
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+    mainClass = javaMainClass
+}
+
 task copyJar(type: Copy) {
     from ("/Users/Maestro/.m2/repository/net/jmp/handoff/daemon/handoff-daemon/${version}") {
         include "handoff-daemon-${version}.jar"
