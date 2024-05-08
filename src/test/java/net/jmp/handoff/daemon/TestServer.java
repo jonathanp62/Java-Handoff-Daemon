@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)TestServer.java   0.7.0   05/07/2024
  * (#)TestServer.java   0.6.0   04/23/2024
  *
  * @author    Jonathan Parker
- * @version   0.6.0
+ * @version   0.7.0
  * @since     0.6.0
  *
  * MIT License
@@ -65,7 +66,7 @@ import org.slf4j.ext.XLogger;
  */
 public class TestServer {
     private static final XLogger LOGGER = new XLogger(LoggerFactory.getLogger(TestServer.class.getName()));
-    private static final String SERVER_URL = "http://localhost:10130";
+    private static final String SERVER_URL = "http://localhost:10131";
 
     private static Thread serverThread;
 
@@ -73,7 +74,8 @@ public class TestServer {
     public static void beforeClass() {
         serverThread = new Thread(() -> {
             final var command = List.of(
-                    "/Users/Maestro/.handoff/daemon/bin/start.sh"
+                    "/Users/Maestro/.handoff/daemon/bin/start.sh",
+                    "10131"
             );
 
             try {
