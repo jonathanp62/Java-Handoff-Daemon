@@ -1,12 +1,13 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)Server.java   0.8.0   05/10/2024
  * (#)Server.java   0.6.0   04/19/2024
  * (#)Server.java   0.5.0   04/17/2024
  * (#)Server.java   0.4.0   04/13/2024
  *
  * @author    Jonathan Parker
- * @version   0.6.0
+ * @version   0.8.0
  * @since     0.4.0
  *
  * MIT License
@@ -201,12 +202,17 @@ final class Server {
     private void versionEventHandler(final SocketIOClient client, final String message) {
         this.logger.entry(client, message);
 
+        final var appInfo = AppInfo.builder()
+                .name("Handoff Daemon")
+                .version(Version.VERSION)
+                .build();
+
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
         final var content = new VersionContent();
 
-        content.setAppName("Handoff Daemon");
-        content.setAppVersion(Version.VERSION);
+        content.setAppName(appInfo.getName());
+        content.setAppVersion(appInfo.getVersion());
 
         this.logEvent(SocketEvents.VERSION.getValue(), sessionId, message);
         this.logRequest(request);

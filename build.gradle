@@ -70,14 +70,23 @@ repositories {
 }
 
 dependencies {
-    implementation libs.ch.qos.logback.logback.classic
-    implementation libs.ch.qos.logback.logback.core
+    runtimeOnly libs.ch.qos.logback.logback.classic
+    runtimeOnly libs.ch.qos.logback.logback.core
     implementation libs.com.corundumstudio.socketio.netty.socketio
     implementation libs.com.google.code.gson.gson
+    implementation libs.org.projectlombok.lombok
+    annotationProcessor libs.org.projectlombok.lombok
     implementation libs.org.slf4j.slf4j.api
     implementation libs.org.slf4j.slf4j.ext
     testImplementation libs.io.socket.socket.io.client
     testImplementation libs.junit.junit
+
+    /*
+     * The following dependencies may be required with Lombok:
+     *
+     * implementation libs.org.mapstruct.mapstruct.processor
+     * implementation libs.org.projectlombok.lombok.mapstruct.binding
+     */
 }
 
 group = 'net.jmp.handoff.daemon'
@@ -100,12 +109,12 @@ publishing {
     }
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release.set(21)
 }
 
-tasks.withType(Javadoc) {
+tasks.withType(Javadoc).configureEach {
     options.encoding = 'UTF-8'
 }
 
@@ -113,7 +122,7 @@ tasks.withType(Javadoc) {
  * Execute with - gradle execProgram instead of gradle run
  */
 
-task execProgram(type: JavaExec) {
+tasks.register('execProgram', JavaExec) {
     allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
     classpath = sourceSets.main.runtimeClasspath
     description = "Run the main class with JavaExecTask"
@@ -122,7 +131,7 @@ task execProgram(type: JavaExec) {
     mainClass = javaMainClass
 }
 
-task execProgram10131(type: JavaExec) {
+tasks.register('execProgram10131', JavaExec) {
     allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
     args '10131'
     classpath = sourceSets.main.runtimeClasspath
@@ -132,7 +141,7 @@ task execProgram10131(type: JavaExec) {
     mainClass = javaMainClass
 }
 
-task execProgramNotAPort(type: JavaExec) {
+tasks.register('execProgramNotAPort', JavaExec) {
     allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
     args 'not-a-port'
     classpath = sourceSets.main.runtimeClasspath
@@ -142,7 +151,7 @@ task execProgramNotAPort(type: JavaExec) {
     mainClass = javaMainClass
 }
 
-task execProgram0(type: JavaExec) {
+tasks.register('execProgram0', JavaExec) {
     allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
     args '0'
     classpath = sourceSets.main.runtimeClasspath
@@ -152,7 +161,7 @@ task execProgram0(type: JavaExec) {
     mainClass = javaMainClass
 }
 
-task execProgram65536(type: JavaExec) {
+tasks.register('execProgram65536', JavaExec) {
     allJvmArgs = ['-ea', '-Dlogback.configurationFile=config/logback.xml']
     args '65536'
     classpath = sourceSets.main.runtimeClasspath
@@ -162,8 +171,8 @@ task execProgram65536(type: JavaExec) {
     mainClass = javaMainClass
 }
 
-task copyJar(type: Copy) {
-    from ("/Users/Maestro/.m2/repository/net/jmp/handoff/daemon/handoff-daemon/${version}") {
+tasks.register('copyJar', Copy) {
+    from("/Users/Maestro/.m2/repository/net/jmp/handoff/daemon/handoff-daemon/${version}") {
         include "handoff-daemon-${version}.jar"
     }
     into '/Users/Maestro/.handoff/daemon/lib'
