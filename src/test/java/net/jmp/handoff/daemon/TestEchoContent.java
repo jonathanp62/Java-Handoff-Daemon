@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
- * (#)TestEchoContent.java  0.6.0   04/23/2024
+ * (#)TestEchoContent.java  0.8.0   05/10/2024
+ * (#)TestEchoContent.java  0.8.0   04/23/2024
  *
  * @author    Jonathan Parker
- * @version   0.6.0
+ * @version   0.8.0
  * @since     0.6.0
  *
  * MIT License
@@ -54,5 +55,15 @@ public class TestEchoContent {
     @Test
     public void testGetType() {
         assertEquals("Echo", echoContent.getType());
+    }
+
+    @Test
+    public void testBuilder() {
+        final EchoContent content = Builder.of(EchoContent::new)
+                .with(EchoContent::setMessage, "My test message")
+                .build();
+
+        assertEquals("Echo", content.getType());
+        assertEquals("My test message", content.getMessage());
     }
 }
