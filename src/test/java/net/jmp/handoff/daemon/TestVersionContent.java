@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)TestVersionContent.java   0.8.0   05/10/2024
  * (#)TestVersionContent.java   0.6.0   04/20/2024
  *
  * @author    Jonathan Parker
- * @version   0.6.0
+ * @version   0.8.0
  * @since     0.6.0
  *
  * MIT License
@@ -60,5 +61,17 @@ public class TestVersionContent {
     @Test
     public void testGetType() {
         assertEquals("Version", versionContent.getType());
+    }
+
+    @Test
+    public void testBuilder() {
+        final VersionContent content = Builder.of(VersionContent::new)
+                .with(VersionContent::setAppVersion, "1.2.3")
+                .with(VersionContent::setAppName, "My App Name")
+                .build();
+
+        assertEquals("Version", content.getType());
+        assertEquals("1.2.3", content.getAppVersion());
+        assertEquals("My App Name", content.getAppName());
     }
 }

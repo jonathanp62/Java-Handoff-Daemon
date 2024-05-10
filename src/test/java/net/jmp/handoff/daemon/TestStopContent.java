@@ -1,10 +1,11 @@
 package net.jmp.handoff.daemon;
 
 /*
+ * (#)TestStopContent.java  0.8.0   05/10/2024
  * (#)TestStopContent.java  0.6.0   04/23/2024
  *
  * @author    Jonathan Parker
- * @version   0.6.0
+ * @version   0.8.0
  * @since     0.6.0
  *
  * MIT License
@@ -60,5 +61,17 @@ public class TestStopContent {
     @Test
     public void testGetType() {
         assertEquals("Stop", stopContent.getType());
+    }
+
+    @Test
+    public void testBuilder() {
+        final StopContent content = Builder.of(StopContent::new)
+                .with(StopContent::setPid, 12345L)
+                .with(StopContent::setMessage, "Please stop!")
+                .build();
+
+        assertEquals("Stop", content.getType());
+        assertEquals(12345, content.getPid());
+        assertEquals("Please stop!", content.getMessage());
     }
 }
