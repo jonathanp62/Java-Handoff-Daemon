@@ -209,10 +209,10 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
-        final var content = new VersionContent();
-
-        content.setAppName(appInfo.getName());
-        content.setAppVersion(appInfo.getVersion());
+        final var content = Builder.of(VersionContent::new)
+                        .with(VersionContent::setAppVersion, appInfo.getVersion())
+                        .with(VersionContent::setAppName, appInfo.getName())
+                        .build();
 
         this.logEvent(SocketEvents.VERSION.getValue(), sessionId, message);
         this.logRequest(request);
@@ -243,10 +243,10 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
-        final var content = new StopContent();
-
-        content.setMessage("Handoff daemon stopping");
-        content.setPid(ProcessHandle.current().pid());
+        final var content = Builder.of(StopContent::new)
+                        .with(StopContent::setMessage, "Handoff daemon stopping")
+                        .with(StopContent::setPid, ProcessHandle.current().pid())
+                        .build();
 
         this.logEvent(SocketEvents.STOP.getValue(), sessionId, message);
         this.logRequest(request);
@@ -283,9 +283,9 @@ final class Server {
 
         final var sessionId = client.getSessionId().toString();
         final var request = new Gson().fromJson(message, Request.class);
-        final var content = new EchoContent();
-
-        content.setMessage("Echo: " + request.getContent());
+        final var content = Builder.of(EchoContent::new)
+                        .with(EchoContent::setMessage, "Echo: " + request.getContent())
+                        .build();
 
         this.logEvent(SocketEvents.ECHO.getValue(), sessionId, message);
         this.logRequest(request);
